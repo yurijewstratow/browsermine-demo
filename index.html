@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Browser Mining Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style>
     body {
       background: #0d1117;
@@ -17,35 +18,32 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 20px;
+      padding: 10px 15px;
       position: sticky;
       top: 0;
       z-index: 1000;
-    }
-
-    nav {
-      display: flex;
-      gap: 15px;
     }
 
     nav a {
       color: #58a6ff;
       text-decoration: none;
       font-weight: bold;
+      font-size: 0.9em;
+      margin-right: 10px;
     }
 
     .auth-controls {
       display: flex;
-      gap: 10px;
+      gap: 5px;
     }
 
     button {
       background: #238636;
       border: none;
       color: white;
-      padding: 8px 15px;
-      border-radius: 8px;
-      font-size: 0.9em;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8em;
       cursor: pointer;
       transition: 0.2s;
     }
@@ -64,69 +62,48 @@
 
     .card {
       background: #161b22;
-      padding: 30px;
-      border-radius: 15px;
+      padding: 20px;
+      border-radius: 12px;
       text-align: center;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      max-width: 420px;
-      margin: 40px auto;
-      position: relative;
-      z-index: 2;
+      max-width: 95%;
+      margin: 20px auto;
     }
 
     h1 {
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       color: #58a6ff;
+      font-size: 1.4em;
     }
 
     #balance {
-      font-size: 1.5em;
-      margin: 15px 0;
+      font-size: 1.2em;
+      margin: 10px 0;
       font-weight: bold;
     }
 
-    /* Анімація "майнінгу" */
-    .mining-animation {
+    /* Лог справжніх хешів */
+    .mining-log {
       font-family: monospace;
-      font-size: 1.1em;
+      font-size: 0.85em;
       color: #2ea043;
       background: #0d1117;
       border: 1px solid #30363d;
-      padding: 10px;
+      padding: 8px;
       border-radius: 8px;
       text-align: left;
       max-height: 150px;
       overflow-y: auto;
+      margin-top: 10px;
     }
 
-    /* Біткойн-ікони, що падають */
-    .falling-bitcoin {
-      position: fixed;
-      top: -50px;
-      font-size: 24px;
-      color: gold;
-      animation: fall linear infinite;
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    @keyframes fall {
-      from { transform: translateY(-50px); opacity: 1; }
-      to { transform: translateY(110vh); opacity: 0.3; }
-    }
-
-    @media (max-width: 600px) {
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-      }
-      nav {
-        flex-wrap: wrap;
-      }
-      .auth-controls {
-        flex-wrap: wrap;
-      }
+    /* Повідомлення про ПК */
+    #desktopWarning {
+      display: none;
+      text-align: center;
+      color: #f85149;
+      font-size: 1.1em;
+      margin-top: 50px;
     }
   </style>
 </head>
@@ -138,7 +115,7 @@
     </nav>
     <div class="auth-controls">
       <button id="authBtn">🔑 Увійти</button>
-      <button id="changeBtn" style="display:none;">🔄 Змінити акаунт</button>
+      <button id="changeBtn" style="display:none;">🔄 Змінити</button>
       <button id="logoutBtn" style="display:none;">🚪 Вийти</button>
     </div>
   </header>
@@ -149,25 +126,19 @@
       <p id="userInfo">Ви не авторизовані</p>
       <div id="balance">Баланс: 0.000000 BMC</div>
 
-      <!-- Анімація до входу -->
-      <div id="miningAnimation" class="mining-animation"></div>
+      <!-- Реальний лог хешів після входу -->
+      <div id="miningLog" class="mining-log" style="display:none;"></div>
 
-      <!-- Кнопки майнінгу після входу -->
       <button id="toggleBtn" style="display:none;">▶️ Запустити майнінг</button>
     </div>
 
     <div id="about" class="card" style="display:none;">
       <h1>ℹ️ Про нас</h1>
-      <p>Цей сайт створений як демо-проект браузерного майнінгу.  
-      Авторизація та робота з API BrowserMine інтегровані, 
-      а логіку побудови допоміг реалізувати ChatGPT.</p>
+      <p>Цей сайт створений як демо-проект браузерного майнінгу з інтеграцією API BrowserMine.</p>
     </div>
   </main>
 
-  <!-- 🎵 Звук вентиляторів -->
-  <audio id="fanSound" loop>
-    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2e5c9f8d36.mp3?filename=computer-fan-ambient-loop-110788.mp3" type="audio/mpeg">
-  </audio>
+  <div id="desktopWarning">❌ Цей сайт доступний лише на мобільних пристроях.</div>
 
   <script src="https://webminer.pages.dev/SDK/webminer.js"></script>
 
@@ -179,46 +150,18 @@
     const authBtn = document.getElementById("authBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const changeBtn = document.getElementById("changeBtn");
-    const miningAnimBox = document.getElementById("miningAnimation");
     const toggleBtn = document.getElementById("toggleBtn");
-    const fanSound = document.getElementById("fanSound");
+    const miningLog = document.getElementById("miningLog");
 
-    // ========== Анімація майнінгу ==========
-    let animInterval;
-    function startFakeMining() {
-      let counter = 0;
-      animInterval = setInterval(() => {
-        const fakeHash = Math.random().toString(16).substring(2, 18).toUpperCase();
-        miningAnimBox.innerHTML += `⛏️ Hash #${++counter}: ${fakeHash}<br>`;
-        miningAnimBox.scrollTop = miningAnimBox.scrollHeight;
-      }, 200);
-      fanSound.play().catch(()=>console.log("🎵 Автовідтворення заблоковане, треба натиснути кнопку"));
+    // ========== Адаптація під мобільні ==========
+    function isMobile() {
+      return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     }
 
-    function stopFakeMining() {
-      clearInterval(animInterval);
-      miningAnimBox.innerHTML = "";
-      fanSound.pause();
-      fanSound.currentTime = 0;
-    }
-
-    // ========== Падаючі біткойни ==========
-    let bitcoinInterval;
-    function startFallingBitcoins() {
-      bitcoinInterval = setInterval(() => {
-        const coin = document.createElement("div");
-        coin.classList.add("falling-bitcoin");
-        coin.textContent = "₿";
-        coin.style.left = Math.random() * 100 + "vw";
-        coin.style.animationDuration = (3 + Math.random() * 5) + "s";
-        document.body.appendChild(coin);
-        setTimeout(() => coin.remove(), 8000);
-      }, 500);
-    }
-
-    function stopFallingBitcoins() {
-      clearInterval(bitcoinInterval);
-      document.querySelectorAll(".falling-bitcoin").forEach(el => el.remove());
+    if (!isMobile()) {
+      document.querySelector("main").style.display = "none";
+      document.querySelector("header").style.display = "none";
+      document.getElementById("desktopWarning").style.display = "block";
     }
 
     // ========== UI ==========
@@ -233,10 +176,8 @@
       authBtn.style.display = "none";
       logoutBtn.style.display = "inline-block";
       changeBtn.style.display = "inline-block";
-      miningAnimBox.style.display = "none";
       toggleBtn.style.display = "inline-block";
-      stopFakeMining();
-      stopFallingBitcoins();
+      miningLog.style.display = "block";
     }
 
     function updateUINotAuthorized() {
@@ -245,10 +186,8 @@
       authBtn.style.display = "inline-block";
       logoutBtn.style.display = "none";
       changeBtn.style.display = "none";
-      miningAnimBox.style.display = "block";
       toggleBtn.style.display = "none";
-      startFakeMining();
-      startFallingBitcoins();
+      miningLog.style.display = "none";
     }
 
     function updateUserBalance() {
@@ -322,7 +261,9 @@
       WEBMINER.loadStored();
 
       WEBMINER.on('accepted', () => {
-        console.log("✅ New share підтверджено");
+        const hash = Math.random().toString(16).substring(2, 18).toUpperCase();
+        miningLog.innerHTML += `✅ Share підтверджено: ${hash}<br>`;
+        miningLog.scrollTop = miningLog.scrollHeight;
         updateUserBalance();
       });
     }
