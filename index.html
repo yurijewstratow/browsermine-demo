@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="uk">
-<head>  <meta charset="UTF-8">
+<head>
+  <meta charset="UTF-8">
   <title>Browser Mining Demo</title>
   <style>
     body {
@@ -62,29 +63,30 @@
     <button id="toggleBtn">▶️ Запустити майнінг</button>
   </div>
 
-  <!-- SDK Webminer -->
+  <!-- Підключення WebMiner SDK -->
   <script src="https://webminer.pages.dev/SDK/webminer.js"></script>
-  <script>
-    // ⚙️ Налаштуй свої параметри
-    const CLIENT_REF = "7161825"; // твій реферальний ID
-    const REDIRECT_URI = "https://yurijewstratow.github.io/browsermine-demo/"; // заміни на свій сайт (обов'язково https)
-    let accessToken = null; // збережемо токен користувача
 
-    // Якщо користувач натиснув "Увійти"
+  <script>
+    // ===== Налаштування =====
+    const CLIENT_REF = "7161825"; // твій реферальний ID
+    const REDIRECT_URI = "https://yurijewstratow.github.io/browsermine-demo/"; // GitHub Pages URL
+    let accessToken = null; // тут зберігатимемо токен користувача
+
+    // ===== Кнопка авторизації =====
     document.getElementById("authBtn").addEventListener("click", () => {
       const url = `https://api.browsermine.com/v1/auth?redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=email,balanceview,affiliate,miningstats&lang=ru&ref=${CLIENT_REF}`;
-      window.location.href = url;
+      window.location.href = url; // редірект на авторизацію BrowserMine
     });
 
-    // Отримання параметра code з URL після авторизації
+    // ===== Отримання параметра code після редіректу =====
     function getQueryParam(name) {
       const params = new URLSearchParams(window.location.search);
       return params.get(name);
     }
 
-    // Функція оновлення балансу з API
+    // ===== Функція оновлення балансу з API =====
     function updateUserBalance() {
-      if (!accessToken) return; // якщо ще немає токена
+      if (!accessToken) return;
       fetch(`https://api.browsermine.com/v1/me?access_token=${accessToken}`)
         .then(res => res.json())
         .then(data => {
@@ -92,12 +94,10 @@
             document.getElementById("balance").innerHTML = `Баланс: ${data.user.balance.BMC.balReal} BMC`;
           }
         })
-        .catch(() => {
-          console.log("⚠️ Помилка при оновленні балансу");
-        });
+        .catch(() => console.log("⚠️ Помилка при оновленні балансу"));
     }
 
-    // Перевірка авторизації після редіректу
+    // ===== Обробка авторизації =====
     const code = getQueryParam("code");
     if (code) {
       fetch(`https://api.browsermine.com/v1/token?code=${code}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`)
@@ -108,7 +108,7 @@
             document.getElementById("userInfo").innerHTML = `👤 ${data.user.name} (UID: ${data.user.uid})`;
             document.getElementById("balance").innerHTML = `Баланс: ${data.user.balance.BMC.balReal} BMC`;
 
-            // Автоматичне оновлення балансу кожні 15 сек
+            // Автоматичне оновлення балансу кожні 15 секунд
             setInterval(updateUserBalance, 15000);
           } else {
             document.getElementById("userInfo").innerHTML = "❌ Помилка авторизації";
@@ -119,7 +119,7 @@
         });
     }
 
-    // ====== Реальний майнінг ======
+    // ===== Реальний майнінг через WebMiner =====
     let mining = false;
     const btn = document.getElementById("toggleBtn");
 
@@ -127,12 +127,14 @@
       mining = true;
       btn.textContent = "⏸️ Зупинити майнінг";
       btn.classList.add("stop");
+
       WEBMINER.config({ login: CLIENT_REF, pass: null });
-      WEBMINER.power(70);
+      WEBMINER.power(70); // використання 70% CPU
       WEBMINER.loadStored();
+
       WEBMINER.on('accepted', () => {
         console.log("✅ New share підтверджено");
-        updateUserBalance(); // оновити баланс відразу після шейру
+        updateUserBalance(); // миттєво оновити баланс після шейру
       });
     }
 
