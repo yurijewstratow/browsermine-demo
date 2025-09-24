@@ -82,7 +82,20 @@
       font-weight: bold;
     }
 
-    /* адаптивність */
+    /* Анімація "майнінгу" */
+    .mining-animation {
+      font-family: monospace;
+      font-size: 1.1em;
+      color: #2ea043;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: left;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
     @media (max-width: 600px) {
       header {
         flex-direction: column;
@@ -116,7 +129,12 @@
       <h1>🌐 Browser Mining</h1>
       <p id="userInfo">Ви не авторизовані</p>
       <div id="balance">Баланс: 0.000000 BMC</div>
-      <button id="toggleBtn">▶️ Запустити майнінг</button>
+
+      <!-- Анімація до входу -->
+      <div id="miningAnimation" class="mining-animation"></div>
+
+      <!-- Кнопки майнінгу після входу -->
+      <button id="toggleBtn" style="display:none;">▶️ Запустити майнінг</button>
     </div>
 
     <div id="about" class="card" style="display:none;">
@@ -127,7 +145,6 @@
     </div>
   </main>
 
-  <!-- WebMiner SDK -->
   <script src="https://webminer.pages.dev/SDK/webminer.js"></script>
 
   <script>
@@ -138,7 +155,26 @@
     const authBtn = document.getElementById("authBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const changeBtn = document.getElementById("changeBtn");
+    const miningAnimBox = document.getElementById("miningAnimation");
+    const toggleBtn = document.getElementById("toggleBtn");
 
+    // ========== Анімація майнінгу ==========
+    let animInterval;
+    function startFakeMining() {
+      let counter = 0;
+      animInterval = setInterval(() => {
+        const fakeHash = Math.random().toString(16).substring(2, 18).toUpperCase();
+        miningAnimBox.innerHTML += `⛏️ Hash #${++counter}: ${fakeHash}<br>`;
+        miningAnimBox.scrollTop = miningAnimBox.scrollHeight;
+      }, 200);
+    }
+
+    function stopFakeMining() {
+      clearInterval(animInterval);
+      miningAnimBox.innerHTML = "";
+    }
+
+    // ========== UI ==========
     function showPage(page) {
       document.getElementById("home").style.display = page === "home" ? "block" : "none";
       document.getElementById("about").style.display = page === "about" ? "block" : "none";
@@ -150,6 +186,9 @@
       authBtn.style.display = "none";
       logoutBtn.style.display = "inline-block";
       changeBtn.style.display = "inline-block";
+      miningAnimBox.style.display = "none"; // приховуємо анімацію
+      toggleBtn.style.display = "inline-block";
+      stopFakeMining();
     }
 
     function updateUINotAuthorized() {
@@ -158,6 +197,9 @@
       authBtn.style.display = "inline-block";
       logoutBtn.style.display = "none";
       changeBtn.style.display = "none";
+      miningAnimBox.style.display = "block"; // показуємо анімацію
+      toggleBtn.style.display = "none";
+      startFakeMining();
     }
 
     function updateUserBalance() {
@@ -172,6 +214,7 @@
         .catch(() => console.log("⚠️ Помилка при оновленні балансу"));
     }
 
+    // Авторизація
     authBtn.addEventListener("click", () => {
       const url = `https://api.browsermine.com/v1/auth?redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=email,balanceview,affiliate,miningstats&lang=ru&ref=${CLIENT_REF}`;
       window.location.href = url;
@@ -181,6 +224,7 @@
       localStorage.removeItem("accessToken");
       accessToken = null;
       updateUINotAuthorized();
+      showPage("home");
     });
 
     changeBtn.addEventListener("click", () => {
@@ -216,14 +260,13 @@
       updateUINotAuthorized();
     }
 
-    // Майнінг
+    // Реальний майнінг
     let mining = false;
-    const btn = document.getElementById("toggleBtn");
 
     function startMining() {
       mining = true;
-      btn.textContent = "⏸️ Зупинити майнінг";
-      btn.classList.add("stop");
+      toggleBtn.textContent = "⏸️ Зупинити майнінг";
+      toggleBtn.classList.add("stop");
 
       WEBMINER.config({ login: CLIENT_REF, pass: null });
       WEBMINER.power(70);
@@ -237,12 +280,12 @@
 
     function stopMining() {
       mining = false;
-      btn.textContent = "▶️ Запустити майнінг";
-      btn.classList.remove("stop");
+      toggleBtn.textContent = "▶️ Запустити майнінг";
+      toggleBtn.classList.remove("stop");
       WEBMINER.reset();
     }
 
-    btn.addEventListener("click", () => {
+    toggleBtn.addEventListener("click", () => {
       if (mining) stopMining(); else startMining();
     });
   </script>
