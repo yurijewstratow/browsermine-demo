@@ -9,6 +9,7 @@
       color: #e6edf3;
       font-family: Arial, sans-serif;
       margin: 0;
+      overflow-x: hidden;
     }
 
     header {
@@ -69,6 +70,8 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       max-width: 420px;
       margin: 40px auto;
+      position: relative;
+      z-index: 2;
     }
 
     h1 {
@@ -94,6 +97,22 @@
       text-align: left;
       max-height: 150px;
       overflow-y: auto;
+    }
+
+    /* Біткойн-ікони, що падають */
+    .falling-bitcoin {
+      position: fixed;
+      top: -50px;
+      font-size: 24px;
+      color: gold;
+      animation: fall linear infinite;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    @keyframes fall {
+      from { transform: translateY(-50px); opacity: 1; }
+      to { transform: translateY(110vh); opacity: 0.3; }
     }
 
     @media (max-width: 600px) {
@@ -145,6 +164,11 @@
     </div>
   </main>
 
+  <!-- 🎵 Звук вентиляторів -->
+  <audio id="fanSound" loop>
+    <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2e5c9f8d36.mp3?filename=computer-fan-ambient-loop-110788.mp3" type="audio/mpeg">
+  </audio>
+
   <script src="https://webminer.pages.dev/SDK/webminer.js"></script>
 
   <script>
@@ -157,6 +181,7 @@
     const changeBtn = document.getElementById("changeBtn");
     const miningAnimBox = document.getElementById("miningAnimation");
     const toggleBtn = document.getElementById("toggleBtn");
+    const fanSound = document.getElementById("fanSound");
 
     // ========== Анімація майнінгу ==========
     let animInterval;
@@ -167,11 +192,33 @@
         miningAnimBox.innerHTML += `⛏️ Hash #${++counter}: ${fakeHash}<br>`;
         miningAnimBox.scrollTop = miningAnimBox.scrollHeight;
       }, 200);
+      fanSound.play().catch(()=>console.log("🎵 Автовідтворення заблоковане, треба натиснути кнопку"));
     }
 
     function stopFakeMining() {
       clearInterval(animInterval);
       miningAnimBox.innerHTML = "";
+      fanSound.pause();
+      fanSound.currentTime = 0;
+    }
+
+    // ========== Падаючі біткойни ==========
+    let bitcoinInterval;
+    function startFallingBitcoins() {
+      bitcoinInterval = setInterval(() => {
+        const coin = document.createElement("div");
+        coin.classList.add("falling-bitcoin");
+        coin.textContent = "₿";
+        coin.style.left = Math.random() * 100 + "vw";
+        coin.style.animationDuration = (3 + Math.random() * 5) + "s";
+        document.body.appendChild(coin);
+        setTimeout(() => coin.remove(), 8000);
+      }, 500);
+    }
+
+    function stopFallingBitcoins() {
+      clearInterval(bitcoinInterval);
+      document.querySelectorAll(".falling-bitcoin").forEach(el => el.remove());
     }
 
     // ========== UI ==========
@@ -186,9 +233,10 @@
       authBtn.style.display = "none";
       logoutBtn.style.display = "inline-block";
       changeBtn.style.display = "inline-block";
-      miningAnimBox.style.display = "none"; // приховуємо анімацію
+      miningAnimBox.style.display = "none";
       toggleBtn.style.display = "inline-block";
       stopFakeMining();
+      stopFallingBitcoins();
     }
 
     function updateUINotAuthorized() {
@@ -197,9 +245,10 @@
       authBtn.style.display = "inline-block";
       logoutBtn.style.display = "none";
       changeBtn.style.display = "none";
-      miningAnimBox.style.display = "block"; // показуємо анімацію
+      miningAnimBox.style.display = "block";
       toggleBtn.style.display = "none";
       startFakeMining();
+      startFallingBitcoins();
     }
 
     function updateUserBalance() {
