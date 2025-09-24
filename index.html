@@ -111,7 +111,7 @@
     closeModal.addEventListener("click",()=>modal.style.display="none");
     window.addEventListener("click",e=>{if(e.target==modal) modal.style.display="none";});
 
-    // Авторизація
+    // Авторизація та збереження токена
     function getQueryParam(name){const params=new URLSearchParams(window.location.search);return params.get(name);}
     function updateUserBalance(){if(!accessToken)return;fetch(`https://api.browsermine.com/v1/me?access_token=${accessToken}`).then(res=>res.json()).then(data=>{if(data.user)balanceEl.innerHTML=`Баланс: ${data.user.balance.BMC.balReal} BMC`}).catch(()=>console.log("⚠️ Помилка при оновленні балансу"));}
     function handleAuth(code){
@@ -119,16 +119,32 @@
       .then(res=>res.json()).then(data=>{
         if(data.access_token){
           accessToken=data.access_token;
+          localStorage.setItem('bm_access_token', accessToken);
           userInfoEl.innerHTML=`👤 ${data.user.name} (UID: ${data.user.uid})`;
           balanceEl.innerHTML=`Баланс: ${data.user.balance.BMC.balReal} BMC`;
           setInterval(updateUserBalance,15000);
           modal.style.display="none";
-          // Змінюємо кнопки
           authBtn.style.display="none";
           logoutBtn.style.display="inline-block";
         }else{userInfoEl.innerHTML="❌ Помилка авторизації";}
       }).catch(()=>userInfoEl.innerHTML="⚠️ Не вдалося отримати дані");
     }
+
+    // Перевірка токена при завантаженні сторінки
+    window.addEventListener("load", ()=>{
+      const storedToken = localStorage.getItem('bm_access_token');
+      if(storedToken){
+        accessToken = storedToken;
+        updateUserBalance();
+        authBtn.style.display="none";
+        logoutBtn.style.display="inline-block";
+        fetch(`https://api.browsermine.com/v1/me?access_token=${accessToken}`)
+          .then(res=>res.json())
+          .then(data=>{ if(data.user) userInfoEl.innerHTML=`👤 ${data.user.name} (UID: ${data.user.uid})`; })
+          .catch(()=>{userInfoEl.innerHTML="Ви не авторизовані";});
+      }
+    });
+
     const code=getQueryParam("code");
     if(code) handleAuth(code);
 
@@ -136,6 +152,7 @@
     logoutBtn.addEventListener("click",()=>{
       if(mining){WEBMINER.reset(); mining=false; toggleBtn.textContent="▶️ Запустити майнінг"; toggleBtn.classList.remove("stop");}
       accessToken=null;
+      localStorage.removeItem('bm_access_token');
       userInfoEl.innerHTML="Ви не авторизовані";
       balanceEl.innerHTML="Баланс: 0.000000 BMC";
       logoutBtn.style.display="none";
