@@ -132,28 +132,35 @@
         if(data.access_token){
           accessToken=data.access_token;
           localStorage.setItem('bm_access_token', accessToken);
-          userInfoEl.innerHTML=`👤 ${data.user.name} (UID: ${data.user.uid})`;
+
+          // Приховуємо надпис
+          userInfoEl.style.display="none";
+
           balanceEl.innerHTML=`Баланс: ${data.user.balance.BMC.balReal} BMC`;
           setInterval(updateUserBalance,15000);
-          modal.style.display="none"; // закриваємо модалку
+          modal.style.display="none"; 
           authBtn.style.display="none";
           logoutBtn.style.display="inline-block";
 
-          // автоматично повертаємо на головну
+          // головна вкладка
           tabLinks.forEach(b=>b.classList.remove("active"));
           document.querySelector('[data-tab="mainSection"]').classList.add("active");
           tabContents.forEach(c=>c.classList.remove("active"));
           document.getElementById("mainSection").classList.add("active");
 
-          // очищаємо URL від ?code=...
+          // очистка URL
           window.history.replaceState({}, document.title, REDIRECT_URI);
         }else{
+          userInfoEl.style.display="block";
           userInfoEl.innerHTML="❌ Помилка авторизації";
         }
-      }).catch(()=>userInfoEl.innerHTML="⚠️ Не вдалося отримати дані");
+      }).catch(()=>{
+        userInfoEl.style.display="block";
+        userInfoEl.innerHTML="⚠️ Не вдалося отримати дані";
+      });
     }
 
-    // Перевірка токена при завантаженні сторінки
+    // Перевірка токена при завантаженні
     window.addEventListener("load", ()=>{
       const storedToken = localStorage.getItem('bm_access_token');
       if(storedToken){
@@ -164,9 +171,14 @@
         fetch(`https://api.browsermine.com/v1/me?access_token=${accessToken}`)
           .then(res=>res.json())
           .then(data=>{
-            if(data.user) userInfoEl.innerHTML=`👤 ${data.user.name} (UID: ${data.user.uid})`;
+            if(data.user){
+              userInfoEl.style.display="none"; // приховати
+            }
           })
-          .catch(()=>{userInfoEl.innerHTML="Ви не авторизовані";});
+          .catch(()=>{
+            userInfoEl.style.display="block";
+            userInfoEl.innerHTML="Ви не авторизовані";
+          });
       }
     });
 
@@ -178,6 +190,7 @@
       if(mining){WEBMINER.reset(); mining=false; toggleBtn.textContent="▶️ Запустити майнінг"; toggleBtn.classList.remove("stop");}
       accessToken=null;
       localStorage.removeItem('bm_access_token');
+      userInfoEl.style.display="block";
       userInfoEl.innerHTML="Ви не авторизовані";
       balanceEl.innerHTML="Баланс: 0.000000 BMC";
       logoutBtn.style.display="none";
@@ -206,6 +219,7 @@
     switchBtn.addEventListener("click",()=>{
       if(mining) stopMining();
       accessToken=null;
+      userInfoEl.style.display="block";
       userInfoEl.innerHTML="Ви не авторизовані";
       balanceEl.innerHTML="Баланс: 0.000000 BMC";
       authBtn.style.display="inline-block"; 
