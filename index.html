@@ -3,241 +3,113 @@
 <head>
   <meta charset="UTF-8">
   <title>Browser Mining Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      background: #0d1117;
-      color: #e6edf3;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-
-    /* Меню зверху */
-    .tab-menu {
-      display: flex;
-      justify-content: center;
-      background-color: #161b22;
-      padding: 10px 0;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .tab-menu button {
-      background: none;
-      border: none;
-      color: #e6edf3;
-      padding: 10px 20px;
-      cursor: pointer;
-      font-size: 1em;
-      transition: 0.2s;
-    }
-    .tab-menu button:hover {
-      background-color: #238636;
-      border-radius: 8px;
-    }
-    .tab-menu button.active {
-      background-color: #58a6ff;
-      border-radius: 8px;
-      color: #0d1117;
-    }
-
-    /* Секції вкладок */
-    .tab-content {
-      display: none;
-      max-width: 600px;
-      margin: 30px auto;
-      padding: 20px;
-      background: #161b22;
-      border-radius: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    .tab-content.active {
-      display: block;
-    }
-
-    /* Стилі картки майнінгу */
-    #mainSection button {
-      background: #238636;
-      border: none;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-size: 1em;
-      cursor: pointer;
-      transition: 0.2s;
-      margin: 5px;
-    }
-    #mainSection button:hover {
-      background: #2ea043;
-    }
-    #mainSection button.stop {
-      background: #da3633;
-    }
-    #mainSection button.stop:hover {
-      background: #f85149;
-    }
-    #balance {
-      font-size: 1.5em;
-      margin: 15px 0;
-      font-weight: bold;
-    }
+    body {background:#0d1117;color:#e6edf3;font-family:Arial,sans-serif;margin:0;padding:0;}
+    .tab-menu{display:flex;flex-wrap:wrap;justify-content:center;background-color:#161b22;padding:10px;box-shadow:0 2px 5px rgba(0,0,0,0.3);position:sticky;top:0;z-index:100;}
+    .tab-menu button{background:none;border:none;color:#e6edf3;padding:10px 20px;cursor:pointer;font-size:1em;transition:0.2s;margin:2px;}
+    .tab-menu button:hover{background-color:#238636;border-radius:8px;}
+    .tab-menu button.active{background-color:#58a6ff;border-radius:8px;color:#0d1117;}
+    .tab-content{display:none;max-width:600px;margin:30px auto;padding:20px;background:#161b22;border-radius:15px;box-shadow:0 4px 12px rgba(0,0,0,0.3);}
+    .tab-content.active{display:block;}
+    #mainSection button{background:#238636;border:none;color:white;padding:10px 20px;border-radius:8px;font-size:1em;cursor:pointer;transition:0.2s;margin:5px;}
+    #mainSection button:hover{background:#2ea043;}
+    #mainSection button.stop{background:#da3633;}
+    #mainSection button.stop:hover{background:#f85149;}
+    #balance{font-size:1.5em;margin:15px 0;font-weight:bold;}
+    .modal{display:none;position:fixed;z-index:200;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,0.8);justify-content:center;align-items:center;}
+    .modal-content{background-color:#161b22;width:90%;max-width:500px;height:80%;border-radius:15px;position:relative;padding:10px;display:flex;flex-direction:column;}
+    .modal iframe{flex:1;border:none;border-radius:10px;}
+    .close{color:#f85149;font-size:28px;font-weight:bold;cursor:pointer;position:absolute;top:10px;right:20px;}
+    .close:hover{color:#da3633;}
+    @media screen and (max-width:480px){.tab-menu{flex-direction:column;}#mainSection,#aboutSection{margin:20px 10px;padding:15px;}#balance{font-size:1.2em;}#mainSection button{padding:8px 15px;font-size:0.9em;}}
   </style>
 </head>
 <body>
-
-  <!-- Меню вкладок -->
   <div class="tab-menu">
     <button class="tab-link active" data-tab="mainSection">Головна</button>
     <button class="tab-link" data-tab="aboutSection">О нас</button>
+    <button id="authBtn">🔑 Увійти</button>
+    <button id="switchBtn">🔄 Змінити акаунт</button>
   </div>
 
-  <!-- Вкладка Головна -->
   <div id="mainSection" class="tab-content active">
     <h1 style="text-align:center; color:#58a6ff;">🌐 Browser Mining</h1>
     <p id="userInfo">Ви не авторизовані</p>
     <div id="balance">Баланс: 0.000000 BMC</div>
     <div style="text-align:center;">
-      <button id="authBtn">🔑 Увійти через BrowserMine</button>
       <button id="toggleBtn">▶️ Запустити майнінг</button>
-      <button id="switchBtn">🔄 Змінити акаунт</button>
     </div>
   </div>
 
-  <!-- Вкладка О нас -->
   <div id="aboutSection" class="tab-content">
     <h2 style="text-align:center; color:#58a6ff;">Про сайт Browser Mining Demo</h2>
-    <p>
-      Цей проект демонструє, як створити веб-сайт для браузерного майнінгу з інтеграцією BrowserMine.com.
-      Користувачі можуть авторизуватися через BrowserMine, отримувати свій баланс, UID та email,
-      запускати майнінг прямо на сайті та відслідковувати баланс у реальному часі.
-    </p>
-    <p>
-      Функціонал сайту:
-      <ul>
-        <li>Старт/Стоп майнінгу через WebMiner SDK</li>
-        <li>Авторизація через BrowserMine без реєстрації на сайті</li>
-        <li>Оновлення балансу кожні 15 секунд</li>
-        <li>Зміна акаунту без перезавантаження сторінки</li>
-      </ul>
-    </p>
-    <p>
-      Технології: HTML5, CSS3, Vanilla JS, WebMiner SDK, BrowserMine API.
-    </p>
+    <p>Цей проект демонструє, як створити веб-сайт для браузерного майнінгу з інтеграцією BrowserMine.com...</p>
   </div>
 
-  <!-- Підключення WebMiner SDK -->
-  <script src="https://webminer.pages.dev/SDK/webminer.js"></script>
+  <div id="authModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <iframe id="authFrame" src=""></iframe>
+    </div>
+  </div>
 
+  <script src="https://webminer.pages.dev/SDK/webminer.js"></script>
   <script>
-    // ===== Меню вкладок =====
+    // Меню вкладок
     const tabLinks = document.querySelectorAll(".tab-link");
     const tabContents = document.querySelectorAll(".tab-content");
+    tabLinks.forEach(btn=>btn.addEventListener("click",()=>{
+      tabLinks.forEach(b=>b.classList.remove("active"));btn.classList.add("active");
+      const tab = btn.getAttribute("data-tab");
+      tabContents.forEach(c=>c.id===tab?c.classList.add("active"):c.classList.remove("active"));
+    }));
 
-    tabLinks.forEach(btn => {
-      btn.addEventListener("click", () => {
-        // Активна кнопка
-        tabLinks.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        // Показати відповідну вкладку
-        const tab = btn.getAttribute("data-tab");
-        tabContents.forEach(content => {
-          content.id === tab ? content.classList.add("active") : content.classList.remove("active");
-        });
-      });
-    });
+    // Налаштування
+    const CLIENT_REF="7161825";
+    const REDIRECT_URI="https://yurijewstratow.github.io/browsermine-demo/";
+    let accessToken=null; let mining=false;
+    const userInfoEl=document.getElementById("userInfo");
+    const balanceEl=document.getElementById("balance");
+    const authBtn=document.getElementById("authBtn");
+    const toggleBtn=document.getElementById("toggleBtn");
+    const switchBtn=document.getElementById("switchBtn");
 
-    // ===== Налаштування майнінгу =====
-    const CLIENT_REF = "7161825";
-    const REDIRECT_URI = "https://yurijewstratow.github.io/browsermine-demo/";
-    let accessToken = null;
-    let mining = false;
+    // Модальне вікно авторизації
+    const modal=document.getElementById("authModal");
+    const iframe=document.getElementById("authFrame");
+    const closeModal=document.querySelector(".close");
+    function openAuthModal(){iframe.src=`https://api.browsermine.com/v1/auth?redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=email,balanceview,affiliate,miningstats&lang=ru&ref=${CLIENT_REF}`; modal.style.display="flex";}
+    authBtn.addEventListener("click",openAuthModal);
+    closeModal.addEventListener("click",()=>modal.style.display="none");
+    window.addEventListener("click",e=>{if(e.target==modal) modal.style.display="none";});
 
-    const userInfoEl = document.getElementById("userInfo");
-    const balanceEl = document.getElementById("balance");
-    const authBtn = document.getElementById("authBtn");
-    const toggleBtn = document.getElementById("toggleBtn");
-    const switchBtn = document.getElementById("switchBtn");
-
-    // ===== Авторизація =====
-    function redirectToAuth() {
-      const url = `https://api.browsermine.com/v1/auth?redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=email,balanceview,affiliate,miningstats&lang=ru&ref=${CLIENT_REF}`;
-      window.location.href = url;
-    }
-    authBtn.addEventListener("click", redirectToAuth);
-
-    function getQueryParam(name) {
-      const params = new URLSearchParams(window.location.search);
-      return params.get(name);
-    }
-
-    function updateUserBalance() {
-      if (!accessToken) return;
-      fetch(`https://api.browsermine.com/v1/me?access_token=${accessToken}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.user) {
-            balanceEl.innerHTML = `Баланс: ${data.user.balance.BMC.balReal} BMC`;
-          }
-        })
-        .catch(() => console.log("⚠️ Помилка при оновленні балансу"));
-    }
-
-    // ===== Обробка авторизації після редіректу =====
-    const code = getQueryParam("code");
-    if (code) {
+    // Авторизація
+    function getQueryParam(name){const params=new URLSearchParams(window.location.search);return params.get(name);}
+    function updateUserBalance(){if(!accessToken)return;fetch(`https://api.browsermine.com/v1/me?access_token=${accessToken}`).then(res=>res.json()).then(data=>{if(data.user)balanceEl.innerHTML=`Баланс: ${data.user.balance.BMC.balReal} BMC`}).catch(()=>console.log("⚠️ Помилка при оновленні балансу"));}
+    function handleAuth(code){
       fetch(`https://api.browsermine.com/v1/token?code=${code}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.access_token) {
-            accessToken = data.access_token;
-            userInfoEl.innerHTML = `👤 ${data.user.name} (UID: ${data.user.uid})`;
-            balanceEl.innerHTML = `Баланс: ${data.user.balance.BMC.balReal} BMC`;
-            setInterval(updateUserBalance, 15000);
-          } else {
-            userInfoEl.innerHTML = "❌ Помилка авторизації";
-          }
-        })
-        .catch(() => {
-          userInfoEl.innerHTML = "⚠️ Не вдалося отримати дані";
-        });
+      .then(res=>res.json()).then(data=>{
+        if(data.access_token){
+          accessToken=data.access_token;
+          userInfoEl.innerHTML=`👤 ${data.user.name} (UID: ${data.user.uid})`;
+          balanceEl.innerHTML=`Баланс: ${data.user.balance.BMC.balReal} BMC`;
+          setInterval(updateUserBalance,15000);
+          modal.style.display="none"; // закриваємо модальне вікно після авторизації
+        }else{userInfoEl.innerHTML="❌ Помилка авторизації";}
+      }).catch(()=>userInfoEl.innerHTML="⚠️ Не вдалося отримати дані");
     }
 
-    // ===== Майнінг =====
-    function startMining() {
-      mining = true;
-      toggleBtn.textContent = "⏸️ Зупинити майнінг";
-      toggleBtn.classList.add("stop");
+    const code=getQueryParam("code");
+    if(code) handleAuth(code);
 
-      WEBMINER.config({ login: CLIENT_REF, pass: null });
-      WEBMINER.power(70);
-      WEBMINER.loadStored();
+    // Майнінг
+    function startMining(){mining=true;toggleBtn.textContent="⏸️ Зупинити майнінг";toggleBtn.classList.add("stop");WEBMINER.config({login:CLIENT_REF,pass:null});WEBMINER.power(70);WEBMINER.loadStored();WEBMINER.on('accepted',()=>updateUserBalance());}
+    function stopMining(){mining=false;toggleBtn.textContent="▶️ Запустити майнінг";toggleBtn.classList.remove("stop");WEBMINER.reset();}
+    toggleBtn.addEventListener("click",()=>{mining?stopMining():startMining();});
 
-      WEBMINER.on('accepted', () => {
-        console.log("✅ New share підтверджено");
-        updateUserBalance();
-      });
-    }
-
-    function stopMining() {
-      mining = false;
-      toggleBtn.textContent = "▶️ Запустити майнінг";
-      toggleBtn.classList.remove("stop");
-      WEBMINER.reset();
-    }
-
-    toggleBtn.addEventListener("click", () => {
-      if (mining) stopMining(); else startMining();
-    });
-
-    // ===== Змінити акаунт =====
-    switchBtn.addEventListener("click", () => {
-      if (mining) stopMining();
-      accessToken = null;
-      userInfoEl.innerHTML = "Ви не авторизовані";
-      balanceEl.innerHTML = "Баланс: 0.000000 BMC";
-      redirectToAuth();
-    });
+    // Змінити акаунт
+    switchBtn.addEventListener("click",()=>{if(mining) stopMining(); accessToken=null; userInfoEl.innerHTML="Ви не авторизовані"; balanceEl.innerHTML="Баланс: 0.000000 BMC"; openAuthModal();});
   </script>
 </body>
 </html>
