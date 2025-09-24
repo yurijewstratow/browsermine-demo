@@ -106,14 +106,26 @@
     const modal=document.getElementById("authModal");
     const iframe=document.getElementById("authFrame");
     const closeModal=document.querySelector(".close");
-    function openAuthModal(){iframe.src=`https://api.browsermine.com/v1/auth?redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=email,balanceview,affiliate,miningstats&lang=ru&ref=${CLIENT_REF}`; modal.style.display="flex";}
+    function openAuthModal(){
+      iframe.src=`https://api.browsermine.com/v1/auth?redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=email,balanceview,affiliate,miningstats&lang=ru&ref=${CLIENT_REF}`;
+      modal.style.display="flex";
+    }
     authBtn.addEventListener("click",openAuthModal);
     closeModal.addEventListener("click",()=>modal.style.display="none");
     window.addEventListener("click",e=>{if(e.target==modal) modal.style.display="none";});
 
     // Авторизація та збереження токена
     function getQueryParam(name){const params=new URLSearchParams(window.location.search);return params.get(name);}
-    function updateUserBalance(){if(!accessToken)return;fetch(`https://api.browsermine.com/v1/me?access_token=${accessToken}`).then(res=>res.json()).then(data=>{if(data.user)balanceEl.innerHTML=`Баланс: ${data.user.balance.BMC.balReal} BMC`}).catch(()=>console.log("⚠️ Помилка при оновленні балансу"));}
+    function updateUserBalance(){
+      if(!accessToken) return;
+      fetch(`https://api.browsermine.com/v1/me?access_token=${accessToken}`)
+        .then(res=>res.json())
+        .then(data=>{
+          if(data.user) balanceEl.innerHTML=`Баланс: ${data.user.balance.BMC.balReal} BMC`;
+        })
+        .catch(()=>console.log("⚠️ Помилка при оновленні балансу"));
+    }
+
     function handleAuth(code){
       fetch(`https://api.browsermine.com/v1/token?code=${code}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`)
       .then(res=>res.json()).then(data=>{
@@ -123,10 +135,21 @@
           userInfoEl.innerHTML=`👤 ${data.user.name} (UID: ${data.user.uid})`;
           balanceEl.innerHTML=`Баланс: ${data.user.balance.BMC.balReal} BMC`;
           setInterval(updateUserBalance,15000);
-          modal.style.display="none";
+          modal.style.display="none"; // закриваємо модалку
           authBtn.style.display="none";
           logoutBtn.style.display="inline-block";
-        }else{userInfoEl.innerHTML="❌ Помилка авторизації";}
+
+          // автоматично повертаємо на головну
+          tabLinks.forEach(b=>b.classList.remove("active"));
+          document.querySelector('[data-tab="mainSection"]').classList.add("active");
+          tabContents.forEach(c=>c.classList.remove("active"));
+          document.getElementById("mainSection").classList.add("active");
+
+          // очищаємо URL від ?code=...
+          window.history.replaceState({}, document.title, REDIRECT_URI);
+        }else{
+          userInfoEl.innerHTML="❌ Помилка авторизації";
+        }
       }).catch(()=>userInfoEl.innerHTML="⚠️ Не вдалося отримати дані");
     }
 
@@ -140,7 +163,9 @@
         logoutBtn.style.display="inline-block";
         fetch(`https://api.browsermine.com/v1/me?access_token=${accessToken}`)
           .then(res=>res.json())
-          .then(data=>{ if(data.user) userInfoEl.innerHTML=`👤 ${data.user.name} (UID: ${data.user.uid})`; })
+          .then(data=>{
+            if(data.user) userInfoEl.innerHTML=`👤 ${data.user.name} (UID: ${data.user.uid})`;
+          })
           .catch(()=>{userInfoEl.innerHTML="Ви не авторизовані";});
       }
     });
@@ -160,15 +185,31 @@
     });
 
     // Майнінг
-    function startMining(){mining=true;toggleBtn.textContent="⏸️ Зупинити майнінг";toggleBtn.classList.add("stop");WEBMINER.config({login:CLIENT_REF,pass:null});WEBMINER.power(70);WEBMINER.loadStored();WEBMINER.on('accepted',()=>updateUserBalance());}
-    function stopMining(){mining=false;toggleBtn.textContent="▶️ Запустити майнінг";toggleBtn.classList.remove("stop");WEBMINER.reset();}
+    function startMining(){
+      mining=true;
+      toggleBtn.textContent="⏸️ Зупинити майнінг";
+      toggleBtn.classList.add("stop");
+      WEBMINER.config({login:CLIENT_REF,pass:null});
+      WEBMINER.power(70);
+      WEBMINER.loadStored();
+      WEBMINER.on('accepted',()=>updateUserBalance());
+    }
+    function stopMining(){
+      mining=false;
+      toggleBtn.textContent="▶️ Запустити майнінг";
+      toggleBtn.classList.remove("stop");
+      WEBMINER.reset();
+    }
     toggleBtn.addEventListener("click",()=>{mining?stopMining():startMining();});
 
     // Змінити акаунт
     switchBtn.addEventListener("click",()=>{
       if(mining) stopMining();
-      accessToken=null; userInfoEl.innerHTML="Ви не авторизовані"; balanceEl.innerHTML="Баланс: 0.000000 BMC";
-      authBtn.style.display="inline-block"; logoutBtn.style.display="none";
+      accessToken=null;
+      userInfoEl.innerHTML="Ви не авторизовані";
+      balanceEl.innerHTML="Баланс: 0.000000 BMC";
+      authBtn.style.display="inline-block"; 
+      logoutBtn.style.display="none";
       openAuthModal();
     });
   </script>
